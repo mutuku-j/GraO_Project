@@ -30,7 +30,10 @@ Thumbs.db
 ~$*
 
 # dotenv
-.env
+.env.example
+
+.requirements.text
+.grao_backup
 
 # Database files
 *.sqlite3
