@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pitch Availability - GraO</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body class="page-wrapper">
+    <header class="header">
+        <nav class="navbar">
+            <div class="container">
+                <a class="navbar-brand" href="{{ url_for('index') }}">
+                    <i class="bi bi-trophy-fill"></i> GraO PITCH
+                </a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <section class="section section--availability">
+            <div class="container">
+                <div class="availability-nav"></div>
+                <a href="{{ url_for('index') }}" class="btn btn-secondary">Back to Home</a>
+            </div>
+
+            <div class="availability-intro">
+                <h1>Pitch Availability</h1>
+                <p class="intro-text">Live calendar view of all booked pitch slots. Empty slots are available for
+                    booking. Click the "Book" button to reserve a slot.</p>
+            </div>
+
+            <div class="calendars-grid">
+                {% for pitch in pitches %}
+                <div class="calendar-card">
+                    <div class="calendar-header">
+                        <h2 class="pitch-name">{{ pitch.pitch_name }}</h2>
+                        <a href="{{ url_for('book_pitch') }}?pitch_id={{ pitch.id }}" class="btn btn-primary">Book</a>
+                    </div>
+                    <div class="calendar-body">
+                        <div id="calendar-{{ pitch.id }}" class="availability-calendar"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p class="copyright">© 2026 <strong>GraO</strong></p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const calendarContainers = document.querySelectorAll('.availability-calendar');
+
+            calendarContainers.forEach(function (container) {
+                const pitchId = container.id.replace('calendar-', '');
+                const calendar = new FullCalendar.Calendar(container, {
+                    initialView: 'timeGridWeek',
+                    headerToolbar: {
+                        left: 'title',
+                        center: '',
+                        right: 'prev,next today'
+                    },
+                    timeZone: 'local',
+                    nowIndicator: true,
+                    allDaySlot: false,
+                    slotMinTime: '06:00:00',
+                    slotMaxTime: '19:00:00',
+                    height: 'auto',
+                    events: `/availability_data/${pitchId}`,
+                    eventDisplay: 'block',
+                    businessHours: {
+                        daysOfWeek: [1, 2, 3, 4, 5, 6, 0],
+                        startTime: '06:00',
+                        endTime: '19:00'
+                    },
+                    eventContent: function (arg) {
+                        const eventTitle = document.createElement('div');
+                        eventTitle.classList.add('event-title');
+                        eventTitle.textContent = arg.event.title;
+                        return { domNodes: [eventTitle] };
+                    }
+                });
+
+                calendar.render();
+
+                setInterval(function () {
+                    calendar.refetchEvents();
+                }, 30000);
+            });
+        });
+    </script>
+</body>
+
+</html>

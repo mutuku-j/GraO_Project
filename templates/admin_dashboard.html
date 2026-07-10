@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - GraO</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body class="page-wrapper">
+    <header class="header">
+        <nav class="navbar">
+            <div class="container">
+                <a class="navbar-brand">
+                    <i class="bi bi-trophy-fill"></i> GraO PITCH
+
+                    <a class="nav-logout" href="{{ url_for('admin_logout') }}">Logout</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            <div class="dashboard-header">
+                <div class="dashboard-title">
+                    <h1>Admin Master Oversight</h1>
+                </div>
+                <div class="dashboard-actions">
+                    <a href="{{ url_for('download_reservations') }}" class="btn btn-primary">Download Reservations</a>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card stat-card--pitches">
+                    <h6>Total Pitches</h6>
+                    <p class="stat-value">{{ stats.total_pitches }}</p>
+                </div>
+                <div class="stat-card stat-card--bookings">
+                    <h6>Total Bookings</h6>
+                    <p class="stat-value">{{ stats.total_bookings }}</p>
+                </div>
+                <div class="stat-card stat-card--upcoming">
+                    <h6>Upcoming</h6>
+                    <p class="stat-value">{{ stats.upcoming_bookings }}</p>
+                </div>
+                <div class="stat-card stat-card--past">
+                    <h6>Past</h6>
+                    <p class="stat-value">{{ stats.past_bookings }}</p>
+                </div>
+            </div>
+
+            <div class="card card--add-pitch">
+                <div class="card-header">
+                    <h2>Add New Pitch</h2>
+                </div>
+                <div class="card-body">
+                    <form id="add-pitch-form" action="{{ url_for('add_pitch') }}" method="POST" class="form-add-pitch">
+                        <input type="text" name="pitch_name" class="form-control"
+                            placeholder="Pitch Name (e.g. Court 3)" required>
+                        <button type="submit" class="btn btn-success">Add Pitch</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card card--manage-pitches">
+                <div class="card-header">
+                    <h2>Manage Pitches</h2>
+                </div>
+                <div class="card-body">
+                    <div class="table-wrapper">
+                        <table class="table table--pitches">
+                            <thead>
+                                <tr>
+                                    <th>Pitch</th>
+                                    <th>Status</th>
+                                    <th>Rename</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for p in pitches %}
+                                <tr>
+                                    <td>{{ p.pitch_name }}</td>
+                                    <td>
+                                        <span
+                                            class="badge badge--{{ 'available' if p.status == 'available' else 'blocked' }}">
+                                            {{ p.status|capitalize }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <form action="{{ url_for('rename_pitch', pitch_id=p.id) }}" method="POST"
+                                            class="form-rename">
+                                            <input type="text" name="new_name" class="form-control"
+                                                placeholder="New name" required>
+                                            <button type="submit" class="btn btn-outline-primary">Rename</button>
+                                        </form>
+                                    </td>
+                                    <td class="actions-cell">
+                                        <form action="{{ url_for('toggle_pitch_status', pitch_id=p.id) }}" method="POST"
+                                            class="form-inline">
+                                            <button type="submit"
+                                                class="btn btn-{{ 'danger' if p.status == 'available' else 'success' }}">
+                                                {{ 'Block' if p.status == 'available' else 'Unblock' }}
+                                            </button>
+                                        </form>
+                                        <form action="{{ url_for('delete_pitch', pitch_id=p.id) }}" method="POST"
+                                            class="form-inline">
+                                            <button type="submit" class="btn btn-danger"
+                                                onclick="return confirm('Delete this pitch and all its bookings?')">
+                                                Delete
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card card--reservations">
+                <div class="card-header">
+                    <h2>All Pitch Reservations</h2>
+                </div>
+                <div class="card-body">
+                    <div class="table-wrapper">
+                        <table class="table table--reservations">
+                            <thead>
+                                <tr>
+                                    <th>User Name</th>
+                                    <th>Pitch</th>
+                                    <th>Date</th>
+                                    <th>Slot</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for b in bookings %}
+                                <tr>
+                                    <td><strong>{{ b.author.full_name if b.author else b.booker_name }}</strong></td>
+                                    <td>{{ b.pitch_ref.pitch_name }}</td>
+                                    <td>{{ b.booking_date }}</td>
+                                    <td>{{ b.start_time }} - {{ b.end_time }}</td>
+                                    <td>
+                                        <form action="{{ url_for('delete_booking', id=b.id) }}" method="POST">
+                                            <button type="submit" class="btn btn-danger"
+                                                onclick="return confirm('Force cancel?')">
+                                                Cancel
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p class="copyright">© 2026 <strong>GraO</strong></p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
